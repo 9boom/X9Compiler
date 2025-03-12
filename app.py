@@ -59,7 +59,7 @@ def upload_game():
         bucket.upload_bytes(project_content, project_filename, file_infos={"game_id": game_id})
         # สร้าง signed URL สำหรับดาวน์โหลดโปรเจค
         auth_token = bucket.get_download_authorization(file_name_prefix=project_filename, valid_duration_in_seconds=valid_duration)
-        project_url = f"https://f000.backblazeb2.com/file/{bucket_name}/{project_filename}?Authorization={auth_token}"
+        project_url = f"https://f005.backblazeb2.com/file/{bucket_name}/{project_filename}?Authorization={auth_token}"
 
         # อัปโหลดโลโก้ (ถ้ามี)
         logo_url = None
@@ -68,7 +68,7 @@ def upload_game():
             logo_filename = f"logos/{game_id}.png"
             bucket.upload_bytes(logo_content, logo_filename, file_infos={"game_id": game_id})
             auth_token_logo = bucket.get_download_authorization(file_name_prefix=logo_filename, valid_duration_in_seconds=valid_duration)
-            logo_url = f"https://f000.backblazeb2.com/file/{bucket_name}/{logo_filename}?Authorization={auth_token_logo}"
+            logo_url = f"https://f005.backblazeb2.com/file/{bucket_name}/{logo_filename}?Authorization={auth_token_logo}"
 
         # อัปโหลด home screen (ถ้ามี)
         home_screen_url = None
@@ -77,7 +77,7 @@ def upload_game():
             hs_filename = f"home_screens/{game_id}.png"
             bucket.upload_bytes(hs_content, hs_filename, file_infos={"game_id": game_id})
             auth_token_hs = bucket.get_download_authorization(file_name_prefix=hs_filename, valid_duration_in_seconds=valid_duration)
-            home_screen_url = f"https://f000.backblazeb2.com/file/{bucket_name}/{hs_filename}?Authorization={auth_token_hs}"
+            home_screen_url = f"https://f005.backblazeb2.com/file/{bucket_name}/{hs_filename}?Authorization={auth_token_hs}"
 
         # บันทึก Game Info ลง Firestore
         game_data = {
