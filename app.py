@@ -3,8 +3,6 @@ import tempfile
 import zipfile
 import uuid
 import subprocess
-from io import BytesIO
-from datetime import timedelta
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import firebase_admin
@@ -28,7 +26,7 @@ CORS(app)
 app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # 100MB
 
 def process_project(project_file, tmpdir):
-    """Process project zip with Pygbag and return built content"""
+    """Process project zip with Pygbag and return the build directory path"""
     # Save uploaded zip
     project_zip_path = os.path.join(tmpdir, 'project.zip')
     project_file.save(project_zip_path)
@@ -52,18 +50,7 @@ def process_project(project_file, tmpdir):
     if not os.path.exists(build_dir):
         raise RuntimeError("Pygbag build failed to generate output files")
     
-    # Create output zip
-    output_zip_path = os.path.join(tmpdir, 'build.zip')
-    with zipfile.ZipFile(output_zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
-        for root, _, files in os.walk(build_dir):
-            for file in files:
-                file_path = os.path.join(root, file)
-                arcname = os.path.relpath(file_path, build_dir)
-                zipf.write(file_path, arcname)
-    
-    # Read output zip content
-    with open(output_zip_path, 'rb') as f:
-        return f.read()
+    return build_dir
 
 @app.route('/upload', methods=['POST'])
 def upload_game():
@@ -86,23 +73,32 @@ def upload_game():
     
     try:
         with tempfile.TemporaryDirectory() as tmpdir:
-            # ประมวลผลโปรเจคด้วย Pygbag
-            project_content = process_project(project_file, tmpdir)
+            # ประมวลผลโปรเจคด้วย Pygbag และรับ path ของ build directory
+            build_dir = process_project(project_file, tmpdir)
             
-            # อัปโหลดไฟล์ที่ build แล้ว
-            project_filename = f"built_games/{game_id}.zip"
-            bucket.upload_bytes(
-                project_content, 
-                project_filename, 
-                file_infos={"game_id": game_id}
-            )
+            # อัปโหลดไฟล์ใน build directory ทีละไฟล์
+            project_prefix = f"built_games/{game_id}/"
+            for root, _, files in os.walk(build_dir):
+                for file in files:
+                    file_path = os.path.join(root, file)
+                    # คำนวณ relative path ภายใน build_dir
+                    relative_path = os.path.relpath(file_path, build_dir)
+                    # สร้าง B2 key โดยใช้ forward slash
+                    b2_key = project_prefix + relative_path.replace("\\", "/")
+                    with open(file_path, 'rb') as f:
+                        file_content = f.read()
+                    bucket.upload_bytes(
+                        file_content, 
+                        b2_key, 
+                        file_infos={"game_id": game_id}
+                    )
             
-            # สร้าง signed URL
+            # สร้าง signed URL สำหรับไฟล์ entry point (index.html)
             auth_token = bucket.get_download_authorization(
-                file_name_prefix=project_filename,
+                file_name_prefix=project_prefix, 
                 valid_duration_in_seconds=valid_duration
             )
-            game_data['project_url'] = f"https://f005.backblazeb2.com/file/{bucket_name}/{project_filename}?Authorization={auth_token}"
+            game_data['project_url'] = f"https://f005.backblazeb2.com/file/{bucket_name}/{project_prefix}index.html?Authorization={auth_token}"
 
             # อัปโหลดโลโก้
             if 'logo' in request.files:
