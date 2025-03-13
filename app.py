@@ -52,6 +52,27 @@ def process_project(project_file, tmpdir):
     
     return build_dir
 
+def modify_index_html(build_dir, base_url, auth_token):
+    """Modify index.html to use B2 URLs"""
+    index_path = os.path.join(build_dir, 'index.html')
+    
+    with open(index_path, 'r', encoding='utf-8') as f:
+        content = f.read()
+    
+    # Replace favicon URL
+    new_favicon_link = f'<link rel="icon" type="image/png" href="{base_url}favicon.png?Authorization={auth_token}" sizes="16x16">'
+    content = content.replace(
+        '<link rel="icon" type="image/png" href="favicon.png" sizes="16x16">',
+        new_favicon_link
+    )
+    
+    # Replace APK URL
+    new_apk_url = f'apk = "{base_url}project.apk?Authorization={auth_token}"'
+    content = content.replace('apk = "project.apk"', new_apk_url)
+    
+    with open(index_path, 'w', encoding='utf-8') as f:
+        f.write(content)
+
 @app.route('/upload', methods=['POST'])
 def upload_game():
     if 'project' not in request.files:
@@ -61,53 +82,59 @@ def upload_game():
     if not project_file.filename.endswith('.zip'):
         return jsonify({'error': 'Invalid file type'}), 400
 
-    # ดึงข้อมูลเกมจากฟอร์ม
+    # Get game data from form
     game_data = {field: request.form.get(field) for field in [
         'name', 'description', 'release_date', 
         'version', 'code_version', 'genre', 'hashtags'
     ]}
     
-    # สร้าง ID และกำหนดเวลาหมดอายุ
+    # Create game ID and set expiration
     game_id = str(uuid.uuid4())
-    valid_duration = 7 * 24 * 3600  # 7 วัน
+    valid_duration = 7 * 24 * 3600  # 7 days
     
     try:
         with tempfile.TemporaryDirectory() as tmpdir:
-            # ประมวลผลโปรเจคด้วย Pygbag และรับ path ของ build directory
+            # Process project with Pygbag
             build_dir = process_project(project_file, tmpdir)
-            
-            # อัปโหลดไฟล์ใน build directory ทีละไฟล์
             project_prefix = f"built_games/{game_id}/"
+            base_url = f"https://f005.backblazeb2.com/file/{bucket_name}/{project_prefix}"
+
+            # Create Auth Token
+            auth_token = bucket.get_download_authorization(
+                file_name_prefix=project_prefix,
+                valid_duration_in_seconds=valid_duration
+            )
+
+            # Modify index.html
+            modify_index_html(build_dir, base_url, auth_token)
+
+            # Upload all files in build directory
             for root, _, files in os.walk(build_dir):
                 for file in files:
                     file_path = os.path.join(root, file)
-                    # คำนวณ relative path ภายใน build_dir
                     relative_path = os.path.relpath(file_path, build_dir)
-                    # สร้าง B2 key โดยใช้ forward slash
                     b2_key = project_prefix + relative_path.replace("\\", "/")
+                    
                     with open(file_path, 'rb') as f:
-                        file_content = f.read()
-                    bucket.upload_bytes(
-                        file_content, 
-                        b2_key, 
-                        file_infos={"game_id": game_id}
-                    )
-            
-            # สร้าง signed URL สำหรับไฟล์ entry point (index.html)
-            auth_token = bucket.get_download_authorization(
-                file_name_prefix=project_prefix, 
-                valid_duration_in_seconds=valid_duration
-            )
-            game_data['project_url'] = f"https://f005.backblazeb2.com/file/{bucket_name}/{project_prefix}index.html?Authorization={auth_token}"
+                        bucket.upload_bytes(
+                            f.read(),
+                            b2_key,
+                            file_infos={"game_id": game_id},
+                            cache_control="public, max-age=31536000"
+                        )
 
-            # อัปโหลดโลโก้
+            # Set project URL
+            game_data['project_url'] = f"{base_url}index.html?Authorization={auth_token}"
+
+            # Upload logo
             if 'logo' in request.files:
                 logo_file = request.files['logo']
                 logo_filename = f"logos/{game_id}.png"
                 bucket.upload_bytes(
                     logo_file.read(),
                     logo_filename,
-                    file_infos={"game_id": game_id}
+                    file_infos={"game_id": game_id},
+                    cache_control="public, max-age=31536000"
                 )
                 auth_token = bucket.get_download_authorization(
                     file_name_prefix=logo_filename,
@@ -115,14 +142,15 @@ def upload_game():
                 )
                 game_data['logo_url'] = f"https://f005.backblazeb2.com/file/{bucket_name}/{logo_filename}?Authorization={auth_token}"
 
-            # อัปโหลดหน้าจอแรก
+            # Upload home screen
             if 'home_screen' in request.files:
                 home_screen_file = request.files['home_screen']
                 hs_filename = f"home_screens/{game_id}.png"
                 bucket.upload_bytes(
                     home_screen_file.read(),
                     hs_filename,
-                    file_infos={"game_id": game_id}
+                    file_infos={"game_id": game_id},
+                    cache_control="public, max-age=31536000"
                 )
                 auth_token = bucket.get_download_authorization(
                     file_name_prefix=hs_filename,
@@ -130,12 +158,13 @@ def upload_game():
                 )
                 game_data['home_screen_url'] = f"https://f005.backblazeb2.com/file/{bucket_name}/{hs_filename}?Authorization={auth_token}"
 
-            # บันทึกข้อมูลลง Firestore
+            # Save data to Firestore
             db.collection('games').document(game_id).set(game_data)
             
             return jsonify({
                 'success': True,
                 'game_id': game_id,
+                'project_url': game_data['project_url'],
                 'build_log': 'Build successful'
             }), 200
 
