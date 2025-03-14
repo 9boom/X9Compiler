@@ -28,11 +28,10 @@ CORS(app)
 app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # 100MB
 
 def validate_project_structure(project_dir):
-    """Validate essential project files"""
+    """Validate essential project files (แก้ไขแล้ว)"""
     required_files = [
-        'main.py',
-        'assets/',
-        'build/web/index.html'
+        'main.py',       # ตรวจสอบไฟล์หลัก
+        'assets/'        # ตรวจสอบโฟลเดอร์ assets
     ]
     
     for file in required_files:
@@ -45,7 +44,7 @@ def validate_project_structure(project_dir):
                 raise ValueError(f"Missing file: {file}")
 
 def process_project(project_file, tmpdir):
-    """Process project zip with Pygbag and return build directory"""
+    """Process project zip with Pygbag (แก้ไขแล้ว)"""
     project_zip_path = os.path.join(tmpdir, 'project.zip')
     project_file.save(project_zip_path)
     
@@ -56,7 +55,7 @@ def process_project(project_file, tmpdir):
     with zipfile.ZipFile(project_zip_path, 'r') as zip_ref:
         zip_ref.extractall(project_dir)
     
-    # Validate project structure
+    # Validate project structure (ตรวจสอบก่อน build)
     validate_project_structure(project_dir)
     
     # Build with pygbag
@@ -71,10 +70,14 @@ def process_project(project_file, tmpdir):
         check=True
     )
     
-    # Verify build output
+    # ตรวจสอบ build output หลัง build เสร็จสิ้น
     web_dir = os.path.join(build_dir, 'web')
-    if not os.path.exists(os.path.join(web_dir, 'index.html')):
-        raise RuntimeError(f"Build failed: {result.stderr}")
+    index_path = os.path.join(web_dir, 'index.html')
+    if not os.path.exists(index_path):
+        raise RuntimeError(
+            f"Build failed - Missing index.html\n"
+            f"Pygbag output:\n{result.stdout}\n{result.stderr}"
+        )
     
     return web_dir
 
