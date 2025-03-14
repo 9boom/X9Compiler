@@ -4,3 +4,4 @@ pygbag
 firebase-admin
 flask-cors
 b2sdk
+beautifulsoup4
