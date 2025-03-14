@@ -166,9 +166,8 @@ def modify_index_html(build_dir, base_url, auth_token):
         // Preserve original keydown handler
         window.addEventListener("keydown", function(e) {
             if(["Space","ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].indexOf(e.code) > -1) {
-                if (!python.config.debug){
-                    e.preventDefault();}
-            }
+                if (!python.config.debug)
+                    e.preventDefault();
     }"""
 
     # Replace JS functions with updated versions
@@ -187,7 +186,7 @@ def modify_index_html(build_dir, base_url, auth_token):
     )
     content = content.replace(
         'pygame.draw.rect(screen,(0,255,0), ( marginx, marginy, track.pos*slot, uy(90)) )',
-        'pygame.draw.rect(screen,(25,25,25), ( marginx, marginy, track.pos*slot, uy(90)) )'
+        'pygame.draw.rect(screen,(100,100,100), ( marginx, marginy, track.pos*slot, uy(90)) )'
     )
     content = content.replace(
         'platform.document.body.style.background = "#7f7f7f"',
