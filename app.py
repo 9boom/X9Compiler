@@ -166,8 +166,8 @@ def modify_index_html(build_dir, base_url, auth_token):
         // Preserve original keydown handler
         window.addEventListener("keydown", function(e) {
             if(["Space","ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].indexOf(e.code) > -1) {
-                if (!python.config.debug)
-                    e.preventDefault();
+                if (!python.config.debug){
+                    e.preventDefault();}
             }
         }, false);
     }"""
