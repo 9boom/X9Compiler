@@ -1,3 +1,4 @@
+import re
 import os
 import tempfile
 import zipfile
