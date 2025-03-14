@@ -169,7 +169,6 @@ def modify_index_html(build_dir, base_url, auth_token):
                 if (!python.config.debug){
                     e.preventDefault();}
             }
-        }, false);
     }"""
 
     # Replace JS functions with updated versions
