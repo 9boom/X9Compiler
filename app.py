@@ -190,7 +190,13 @@ def modify_index_html(build_dir, base_url, auth_token):
         'pygame.draw.rect(screen,(0,255,0), ( marginx, marginy, track.pos*slot, uy(90)) )',
         'pygame.draw.rect(screen,(25,25,25), ( marginx, marginy, track.pos*slot, uy(90)) )'
     )
-
+    content = content.replace(
+        'platform.document.body.style.background = "#7f7f7f"'
+        'platform.document.body.style.background = "#ffa500"'
+    )
+    content = content.replace(
+        'prompt = fnt.render("Ready to start !", True, "blue")'
+        'prompt = fnt.render("START", True, "white")'
     # ==================== URL Replacements ====================
     # Replace favicon URL
     content = content.replace(
