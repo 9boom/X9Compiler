@@ -197,6 +197,7 @@ def modify_index_html(build_dir, base_url, auth_token):
     content = content.replace(
         'prompt = fnt.render("Ready to start !", True, "blue")',
         'prompt = fnt.render("START", True, "white")'
+    )
     # ==================== URL Replacements ====================
     # Replace favicon URL
     content = content.replace(
