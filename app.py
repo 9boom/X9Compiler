@@ -100,7 +100,7 @@ def modify_index_html(build_dir, base_url, auth_token):
     .spinner {
         width: 80px;
         height: 80px;
-        border: 8px solid #333;
+        border: 8px solid white;
         border-top: 8px solid #ff9900;
         border-radius: 50%;
         animation: spin 1s linear infinite;
@@ -185,7 +185,7 @@ def modify_index_html(build_dir, base_url, auth_token):
     )
     content = content.replace(
         'pygame.draw.rect(screen,(0,255,0), ( marginx, marginy, track.pos*slot, uy(90)) )',
-        'pygame.draw.rect(screen,(100,100,100), ( marginx, marginy, track.pos*slot, uy(90)) )'
+        'pygame.draw.rect(screen,(255,255,255), ( marginx, marginy, track.pos*slot, uy(90)) )'
     )
     content = content.replace(
         'platform.document.body.style.background = "#7f7f7f"',
