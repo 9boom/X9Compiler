@@ -152,7 +152,6 @@ def modify_index_html(build_dir, base_url, auth_token):
         transfer.hidden = debug_hidden;
         info.hidden = debug_hidden;
         box.hidden = debug_hidden;
-        document.getElementById("spinnerContainer").style.display = debug_hidden ? "none" : "block";
     }
 
     function custom_prerun() {
