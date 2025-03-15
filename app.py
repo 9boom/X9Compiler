@@ -36,7 +36,7 @@ def process_project(project_file, tmpdir):
     project_dir = os.path.join(tmpdir, 'project')
     os.makedirs(project_dir, exist_ok=True)
     with zipfile.ZipFile(project_zip_path, 'r') as zip_ref:
-        zip_ref.extractall(project_dir)
+       zip_ref.extractall(project_dir)
     
     # Run pygbag build
     result = subprocess.run(
@@ -62,78 +62,6 @@ def modify_index_html(build_dir, base_url, auth_token):
 
     # ==================== CSS Replacement ====================
     new_style = """<style>
-/* Custom spinner styles */
-body {
-    margin: 0;
-    padding: 0;
-    background-color: white; /* เปลี่ยนพื้นหลังเป็นสีขาว */
-    font-family: Arial, sans-serif;
-}
-
-#transfer,
-#status,
-#progress {
-    display: none !important;
-}
-
-canvas.emscripten {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    width: 100%;
-    height: 100%;
-    background-color: transparent;
-    z-index: 5;
-}
-
-/* พื้นหลังของตัวโหลดให้เป็นสีขาว */
-.spinnerContainer {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    text-align: center;
-    background-color: white; /* สีขาว */
-    padding: 20px;
-    border-radius: 10px;
-}
-
-/* สไตล์ของตัวหมุน */
-.spinner {
-    width: 80px;
-    height: 80px;
-    border: 8px solid #ddd;  /* สีของขอบหมุน */
-    border-top: 8px solid #007bff;  /* สีของขอบบน */
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin: 0 auto;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-/* ข้อความโหลด */
-.loadingText {
-    margin-top: 15px;
-    font-size: 18px;
-    color: black; /* สีดำเพื่อให้มองเห็นบนพื้นหลังสีขาว */
-}
-
-/* Preserve original styles */
-div.emscripten { text-align: center; }
-div.emscripten_border { border: 1px solid black; }
-div.thick_border { border: 4px solid black; }
-.topright { position:absolute; top:0px; right:0px; }
-.bottomright { position:absolute; top: 40%; right: 0px; }
-.center { display: flex; align-items: center; justify-content: center; }
-.trinfo { position:relative; right:0px; border: 1px solid black; }
-.framed { position:relative; top:150px; right:10px; border: 1px solid black; }
-</style>"""
-    '''new_style = """<style>
     /* Custom spinner styles */
     body {
         margin: 0;
@@ -167,6 +95,7 @@ div.thick_border { border: 4px solid black; }
         transform: translate(-50%, -50%);
         text-align: center;
         color: white;
+        background-color: white; /* สีขาว */
     }
 
     .spinner {
@@ -199,7 +128,7 @@ div.thick_border { border: 4px solid black; }
     .center { display: flex; align-items: center; justify-content: center; }
     .trinfo { position:relative; right:0px; border: 1px solid black; }
     .framed { position:relative; top:150px; right:10px; border: 1px solid black; }
-    </style>"""'''
+    </style>"""
 
     # Replace entire style block
     content = re.sub(r'<style>.*?</style>', new_style, content, flags=re.DOTALL)
