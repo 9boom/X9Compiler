@@ -95,7 +95,6 @@ def modify_index_html(build_dir, base_url, auth_token):
         transform: translate(-50%, -50%);
         text-align: center;
         color: white;
-        background-color: white; /* สีขาว */
     }
 
     .spinner {
